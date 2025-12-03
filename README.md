@@ -137,5 +137,5 @@ asset_collector/
 
 本项目采用 MIT 许可证，详见 LICENSE 文件。
 
-如果喜欢此项目，可以请作者喝杯咖啡
-wx.png
+如果喜欢此项目，可以请作者喝杯咖啡支持一下
+[wx.png](https://github.com/superbaby12138/Information-Collection/blob/main/wx.png)
