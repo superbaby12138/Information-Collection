@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资产架构树状图</title>
+    <!-- 引入图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- 引入jquery库 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 引入自定义树状图样式和脚本 -->
+    <style>
+        /* 自定义树状图样式 */
+        .tree {
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        .tree ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .tree li {
+            margin: 5px 0;
+        }
+        
+        .tree-node {
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .tree-node:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .tree-node.collapsed::before {
+            content: '+ ';
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .tree-node.expanded::before {
+            content: '- ';
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .tree-node.leaf::before {
+            content: '• ';
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .node-icon {
+            margin-right: 5px;
+        }
+        
+        .node-info {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+    </style>
+    <script>
+        // 自定义树状图功能
+        $(document).ready(function() {
+            // 树节点点击事件
+            $(document).on('click', '.tree-node', function() {
+                var $this = $(this);
+                var $children = $this.next('ul');
+                
+                if ($children.length > 0) {
+                    $children.toggle();
+                    if ($this.hasClass('collapsed')) {
+                        $this.removeClass('collapsed').addClass('expanded');
+                    } else {
+                        $this.removeClass('expanded').addClass('collapsed');
+                    }
+                }
+            });
+        });
+        
+        // 渲染树状图
+        function renderTree(data, containerId) {
+            var container = document.getElementById(containerId);
+            var treeHtml = buildTreeHtml(data);
+            container.innerHTML = treeHtml;
+        }
+        
+        // 构建树状图HTML
+        function buildTreeHtml(node) {
+            var html = '';
+            
+            if (node.children && node.children.length > 0) {
+                html += '<ul>';
+                node.children.forEach(function(child) {
+                    var nodeClass = child.children && child.children.length > 0 ? 'tree-node collapsed' : 'tree-node leaf';
+                    var icon = child.icon || '📁';
+                    var info = child.info || '';
+                    
+                    html += '<li>';
+                    html += '<div class="' + nodeClass + '">';
+                    html += '<span class="node-icon">' + icon + '</span>';
+                    html += '<span class="node-name">' + child.name + '</span>';
+                    if (info) {
+                        html += '<span class="node-info">' + info + '</span>';
+                    }
+                    html += '</div>';
+                    html += buildTreeHtml(child);
+                    html += '</li>';
+                });
+                html += '</ul>';
+            }
+            
+            return html;
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .tree-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #assetTree {
+            min-height: 500px;
+        }
+
+        /* 节点样式 */
+        .ztree li span.button.node_name {
+            font-size: 14px;
+        }
+
+        /* 资产类型图标颜色 */
+        .domain-node { color: #1890ff; }
+        .ip-node { color: #52c41a; }
+        .port-node { color: #fa8c16; }
+        .service-node { color: #722ed1; }
+        .directory-node { color: #eb2f96; }
+
+        /* 控制面板样式 */
+        .control-panel {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"], select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #40a9ff;
+        }
+
+        button:active {
+            background-color: #096dd9;
+        }
+
+        /* 结果统计样式 */
+        .stats-panel {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #f0f2f5;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1890ff;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 返回首页按钮 */
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-home a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #52c41a;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .back-home a:hover {
+            background-color: #73d13d;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            input[type="text"], select {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>资产架构树状图</h1>
+        
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="form-group">
+                    <label for="targetInput">目标地址</label>
+                    <input type="text" id="targetInput" placeholder="请输入目标域名或IP">
+                </div>
+                <button id="loadTreeBtn">加载树状图</button>
+                <button id="expandAllBtn">展开全部</button>
+                <button id="collapseAllBtn">收起全部</button>
+            </div>
+        </div>
+
+        <!-- 结果统计 -->
+        <div class="stats-panel" id="statsPanel" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="domainCount">0</span>
+                    <span class="stat-label">域名数量</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="ipCount">0</span>
+                    <span class="stat-label">IP数量</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="portCount">0</span>
+                    <span class="stat-label">开放端口</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="dirCount">0</span>
+                    <span class="stat-label">目录数量</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 树状图容器 -->
+        <div class="tree-container">
+            <ul id="assetTree" class="ztree"></ul>
+        </div>
+
+        <!-- 返回首页 -->
+        <div class="back-home">
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        var collectedData = {};
+
+        // 初始化页面
+        $(document).ready(function() {
+            // 绑定按钮事件
+            $("#loadTreeBtn").click(function() {
+                var target = $("#targetInput").val().trim();
+                if (target) {
+                    loadAssetTree(target);
+                } else {
+                    alert("请输入目标地址");
+                }
+            });
+
+            $("#expandAllBtn").click(function() {
+                $("#assetTree").find(".tree-node.collapsed").each(function() {
+                    $(this).click();
+                });
+            });
+
+            $("#collapseAllBtn").click(function() {
+                $("#assetTree").find(".tree-node.expanded").each(function() {
+                    $(this).click();
+                });
+            });
+
+            // 按下回车键加载树状图
+            $("#targetInput").keypress(function(e) {
+                if (e.which == 13) {
+                    $("#loadTreeBtn").click();
+                }
+            });
+        });
+
+        // 从后端加载资产数据
+        function loadAssetTree(target) {
+            $.ajax({
+                url: "/api/get_result",
+                type: "GET",
+                data: { target: target },
+                dataType: "json",
+                beforeSend: function() {
+                    $("#loadTreeBtn").text("加载中...").prop("disabled", true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        collectedData = data.data;
+                        // 处理数据生成树节点
+                        var treeData = processDataToCustomTree(collectedData);
+                        // 使用自定义树状图渲染
+                        renderTree({ children: treeData }, "assetTree");
+                        // 更新统计信息
+                        updateStats(collectedData);
+                    } else {
+                        alert("加载失败: " + data.message);
+                    }
+                },
+                error: function() {
+                    alert("加载失败，请检查网络连接或目标地址是否正确");
+                },
+                complete: function() {
+                    $("#loadTreeBtn").text("加载树状图").prop("disabled", false);
+                }
+            });
+        }
+
+        // 将收集到的数据转换为自定义树节点结构
+        function processDataToCustomTree(data) {
+            var nodes = [];
+            var rootName = data.target;
+
+            // 创建根节点
+            var rootNode = {
+                name: rootName,
+                icon: data.is_ip ? '🌐' : '📁',
+                children: []
+            };
+
+            // 处理IP节点
+            if (data.ips && data.ips.length > 0) {
+                data.ips.forEach(function(ip) {
+                    var ipNode = {
+                        name: ip,
+                        icon: '🌐',
+                        children: []
+                    };
+
+                    // 处理开放端口
+                    if (data.open_ports && data.open_ports.length > 0) {
+                        data.open_ports.forEach(function(portInfo) {
+                            if (portInfo.ip === ip) {
+                                var serviceName = "unknown";
+                                // 查找对应的HTTP服务信息
+                                if (data.http_service_info && data.http_service_info[ip] && data.http_service_info[ip][portInfo.port]) {
+                                    serviceName = data.http_service_info[ip][portInfo.port].service;
+                                }
+                                
+                                var portNode = {
+                                    name: "端口: " + portInfo.port,
+                                    icon: '🔌',
+                                    info: serviceName,
+                                    children: []
+                                };
+
+                                // 处理目录信息
+                                if (data.directories && data.directories.length > 0) {
+                                    data.directories.forEach(function(dirInfo) {
+                                        // 从URL中解析出IP和端口
+                                        var url = dirInfo.url;
+                                        var urlParts = new URL(url);
+                                        var dirIp = urlParts.hostname;
+                                        var dirPort = urlParts.port;
+                                        if (!dirPort) {
+                                            dirPort = urlParts.protocol === 'https:' ? 443 : 80;
+                                        }
+                                        
+                                        if (dirIp === ip && dirPort == portInfo.port) {
+                                            portNode.children.push({
+                                                name: "目录: " + dirInfo.path,
+                                                icon: '📂',
+                                                info: dirInfo.status_code
+                                            });
+                                        }
+                                    });
+                                }
+                                
+                                ipNode.children.push(portNode);
+                            }
+                        });
+                    }
+                    
+                    rootNode.children.push(ipNode);
+                });
+            }
+
+            // 处理子域名节点
+            if (data.subdomains && data.subdomains.length > 0) {
+                data.subdomains.forEach(function(subdomainInfo) {
+                    var subdomainNode = {
+                        name: subdomainInfo.subdomain,
+                        icon: '📁',
+                        children: []
+                    };
+
+                    // 处理子域名的IP
+                    if (subdomainInfo.ips && subdomainInfo.ips.length > 0) {
+                        subdomainInfo.ips.forEach(function(ip) {
+                            var subIpNode = {
+                                name: ip,
+                                icon: '🌐',
+                                children: []
+                            };
+
+                            // 查找该IP的开放端口
+                            if (data.open_ports && data.open_ports.length > 0) {
+                                data.open_ports.forEach(function(portInfo) {
+                                    if (portInfo.ip === ip) {
+                                        var serviceName = "unknown";
+                                        if (data.http_service_info && data.http_service_info[ip] && data.http_service_info[ip][portInfo.port]) {
+                                            serviceName = data.http_service_info[ip][portInfo.port].service;
+                                        }
+                                        
+                                        var subPortNode = {
+                                            name: "端口: " + portInfo.port,
+                                            icon: '🔌',
+                                            info: serviceName,
+                                            children: []
+                                        };
+
+                                        // 查找该IP:端口的目录
+                                        if (data.directories && data.directories.length > 0) {
+                                            data.directories.forEach(function(dirInfo) {
+                                                var url = dirInfo.url;
+                                                var urlParts = new URL(url);
+                                                var dirIp = urlParts.hostname;
+                                                var dirPort = urlParts.port;
+                                                if (!dirPort) {
+                                                    dirPort = urlParts.protocol === 'https:' ? 443 : 80;
+                                                }
+                                                
+                                                if (dirIp === ip && dirPort == portInfo.port) {
+                                                    subPortNode.children.push({
+                                                        name: "目录: " + dirInfo.path,
+                                                        icon: '📂',
+                                                        info: dirInfo.status_code
+                                                    });
+                                                }
+                                            });
+                                        }
+                                        
+                                        subIpNode.children.push(subPortNode);
+                                    }
+                                });
+                            }
+                            
+                            subdomainNode.children.push(subIpNode);
+                        });
+                    }
+                    
+                    rootNode.children.push(subdomainNode);
+                });
+            }
+
+            return [rootNode];
+        }
+
+        // 更新统计信息
+        function updateStats(data) {
+            // 计算域名数量
+            var domainCount = data.subdomains ? data.subdomains.length + (data.is_ip ? 0 : 1) : (data.is_ip ? 0 : 1);
+            // 计算IP数量
+            var ipCount = new Set();
+            if (data.ips) {
+                data.ips.forEach(ip => ipCount.add(ip));
+            }
+            if (data.subdomain_ips) {
+                Object.values(data.subdomain_ips).forEach(ips => {
+                    ips.forEach(ip => ipCount.add(ip));
+                });
+            }
+            // 计算开放端口数量
+            var portCount = 0;
+            if (data.open_ports) {
+                Object.values(data.open_ports).forEach(ports => {
+                    portCount += ports.length;
+                });
+            }
+            // 计算目录数量
+            var dirCount = 0;
+            if (data.directories) {
+                Object.values(data.directories).forEach(ipPorts => {
+                    Object.values(ipPorts).forEach(dirs => {
+                        dirCount += dirs.length;
+                    });
+                });
+            }
+
+            // 更新UI
+            $("#domainCount").text(domainCount);
+            $("#ipCount").text(ipCount.size);
+            $("#portCount").text(portCount);
+            $("#dirCount").text(dirCount);
+            $("#statsPanel").show();
+        }
+    </script>
+</body>
+</html>
