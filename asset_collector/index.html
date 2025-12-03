@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信息收集工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"><title>资产收集工具</title>
+    <!-- 引入第三方库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/theme-chalk/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.6/lib/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        /* 头部样式 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* 主体内容 */
+        .main-content {
+            padding: 30px;
+        }
+        
+        /* 配置区域 */
+        .config-section {
+            margin-bottom: 30px;
+        }
+        
+        .config-section h2 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .el-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        /* 按钮样式 */
+        .button-group {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .el-button {
+            padding: 12px 30px;
+            font-size: 1rem;
+            margin: 0 10px;
+            border-radius: 25px;
+        }
+        
+        .el-button--primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .el-button--danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border: none;
+        }
+        
+        /* 结果区域 */
+        .results-section {
+            margin-top: 30px;
+        }
+        
+        .results-section h2 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .log-area {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .log-line {
+            margin-bottom: 5px;
+        }
+        
+        .log-time {
+            color: #90cdf4;
+            margin-right: 10px;
+        }
+        
+        .log-success {
+            color: #48bb78;
+        }
+        
+        .log-error {
+            color: #f56565;
+        }
+        
+        .log-info {
+            color: #ecc94b;
+        }
+        
+        /* 状态标签 */
+        .status-section {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .status-tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-tag.running {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-tag.stopped {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status-tag.completed {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+        
+        /* 复选框样式 */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .el-form {
+                padding: 15px;
+            }
+            
+            .button-group {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .el-button {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa fa-search"></i> 资产收集工具</h1>
+            <p>基于Flask+Vue.js的Web资产收集工具，支持多种功能</p>
+        </div>
+        
+        <div class="main-content" id="app">
+            <!-- 目标配置 -->
+            <div class="config-section">
+                <h2><i class="fa fa-cog"></i> 目标配置</h2>
+                <div class="el-form">
+                    <div class="form-group">
+                        <label for="targets">目标地址（多个目标用换行分隔）</label>
+                        <textarea 
+                            id="targets"
+                            v-model="targets"
+                            placeholder="请输入目标地址，例如：example.com"
+                            rows="4"
+                            class="el-textarea__inner"
+                            style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #dcdfe6;"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 高级配置 -->
+            <div class="config-section">
+                <h2><i class="fa fa-sliders"></i> 高级配置</h2>
+                <div class="el-form">
+                    <!-- 功能选择复选框 -->
+                    <div class="form-group">
+                        <label>功能选择</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" v-model="params.enabledFeatures" value="subdomainBrute" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                子域名爆破
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" v-model="params.enabledFeatures" value="directoryBrute" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                目录爆破
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" v-model="params.enabledFeatures" value="portScan" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                端口扫描
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" v-model="params.enabledFeatures" value="techStack" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                技术栈识别
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" v-model="params.enabledFeatures" value="sideStation" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                旁站探测
+                            </label>
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" v-model="params.enabledFeatures" value="fofaSearch" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                FOFA搜索
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- FOFA API配置 -->
+                    <div class="form-group">
+                        <label for="fofaEmail">FOFA邮箱</label>
+                        <input 
+                            type="text" 
+                            id="fofaEmail"
+                            v-model="params.fofa_email"
+                            placeholder="请输入FOFA账号邮箱"
+                            class="el-input__inner"
+                            style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #dcdfe6;"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fofaKey">FOFA密钥</label>
+                        <input 
+                            type="text" 
+                            id="fofaKey"
+                            v-model="params.fofa_key"
+                            placeholder="请输入FOFA API密钥"
+                            class="el-input__inner"
+                            style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #dcdfe6;"
+                        >
+                    </div>
+                    
+                    <!-- 其他配置 -->
+                    <div class="form-group">
+                        <label for="subdomainDict">子域名字典</label>
+                        <select 
+                            id="subdomainDict"
+                            v-model="params.subdomain_dict"
+                            class="el-select__input"
+                            style="width: 100%; padding: 12px 15px; border-radius: 6px; border: 1px solid #dcdfe6; font-size: 16px; height: auto;"
+                        >
+                            <option value="">自动选择（推荐）</option>
+                            <option v-for="dict in subdomainDicts" :key="dict" :value="dict">{{ dict }}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="threads">线程数</label>
+                        <input 
+                            type="number" 
+                            id="threads"
+                            v-model.number="params.threads"
+                            min="1" 
+                            max="100"
+                            placeholder="线程数"
+                            class="el-input__inner"
+                            style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #dcdfe6;"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeout">超时时间（秒）</label>
+                        <input 
+                            type="number" 
+                            id="timeout"
+                            v-model.number="params.timeout"
+                            min="1" 
+                            max="30"
+                            placeholder="超时时间"
+                            class="el-input__inner"
+                            style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #dcdfe6;"
+                        >
+                    </div>
+                    
+                    <!-- 控制按钮（移到这里） -->
+                    <div class="button-group" style="margin-top: 30px;">
+                        <button 
+                            @click="startCollect" 
+                            :disabled="collecting"
+                            class="el-button el-button--primary"
+                        >
+                            <i class="fa fa-play"></i> 开始收集
+                        </button>
+                        <button 
+                            @click="stopCollect" 
+                            :disabled="!collecting"
+                            class="el-button el-button--danger"
+                        >
+                            <i class="fa fa-stop"></i> 停止收集
+                        </button>
+                        <button 
+                            @click="goToTree"
+                            class="el-button"
+                        >
+                            <i class="fa fa-sitemap"></i> 查看树状图
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+
+            
+
+            
+            <!-- 状态显示 -->
+            <div class="status-section">
+                <div class="status-tag" :class="statusClass">
+                    <i class="fa fa-circle" style="margin-right: 5px;"></i>
+                    {{ statusText }}
+                </div>
+                <div class="status-tag" v-if="currentTarget">
+                    <i class="fa fa-globe" style="margin-right: 5px;"></i>
+                    当前目标: {{ currentTarget }}
+                </div>
+            </div>
+            
+            <!-- 实时日志 -->
+            <div class="results-section">
+                <h2><i class="fa fa-file-text-o"></i> 实时日志</h2>
+                <div class="log-area">
+                    <div 
+                        v-for="(log, index) in logs" 
+                        :key="index"
+                        class="log-line"
+                    >
+                        <span class="log-time">{{ formatTime(log.time) }}</span>
+                        <span v-if="log.level === 'success'" class="log-success">{{ log.msg }}</span>
+                        <span v-else-if="log.level === 'error'" class="log-error">{{ log.msg }}</span>
+                        <span v-else-if="log.level === 'info'" class="log-info">{{ log.msg }}</span>
+                        <span v-else>{{ log.msg }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    targets: '',  // 目标地址
+                    params: {
+                        threads: 20,
+                        timeout: 5,
+                        retry: 2,
+                        http_method: 'GET',
+                        status_whitelist: [200, 301, 302, 401, 403, 500],
+                        min_size: 0,
+                        max_size: 1024 * 1024,
+                        custom_404: '',
+                        subdomain_dict: '',  // 子域名字典文件
+                        enabledFeatures: ['subdomainBrute', 'directoryBrute', 'portScan', 'techStack', 'sideStation'],  // 默认启用的功能
+                        fofa_email: '',  // FOFA邮箱
+                        fofa_key: ''  // FOFA密钥
+                    },
+                    collecting: false,  // 是否正在收集
+                    logs: [],  // 日志记录
+                    currentTarget: '',  // 当前处理的目标
+                    subdomainDicts: [],  // 可用的子域名字典列表
+                    checkInterval: null  // 状态检查定时器
+                };
+            },
+            computed: {
+                statusClass() {
+                    if (this.collecting) return 'running';
+                    return 'stopped';
+                },
+                statusText() {
+                    if (this.collecting) return '收集进行中';
+                    return '就绪';
+                }
+            },
+            mounted() {
+                this.getStatus();
+                this.loadSubdomainDicts();
+                
+                // 定时检查状态
+                this.checkInterval = setInterval(() => {
+                    this.getStatus();
+                }, 2000);
+            },
+            beforeDestroy() {
+                if (this.checkInterval) {
+                    clearInterval(this.checkInterval);
+                }
+            },
+            methods: {
+                formatTime(time) {
+                    if (!time) return '';
+                    // 直接使用后端提供的格式化时间
+                    return time;
+                },
+                
+                // 获取系统状态
+                async getStatus() {
+                    try {
+                        const response = await axios.get('/api/status');
+                        if (response.data.code === 200) {
+                            const status = response.data.data;
+                            this.collecting = status.collecting;
+                            this.currentTarget = status.current_target || '';
+                            
+                            // 添加最新日志
+                            if (status.log && status.log.length > 0) {
+                                status.log.forEach(log => {
+                                    if (!this.logs.some(l => l.time === log.time)) {
+                                        this.logs.push(log);
+                                    }
+                                });
+                                
+                                // 限制日志数量
+                                if (this.logs.length > 1000) {
+                                    this.logs = this.logs.slice(-1000);
+                                }
+                                
+                                // 自动滚动到底部
+                                this.scrollToBottom();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('获取状态失败:', error);
+                    }
+                },
+                
+                // 加载可用的子域名字典列表
+                async loadSubdomainDicts() {
+                    try {
+                        const response = await axios.get('/api/subdomain/dict/list');
+                        if (response.data.code === 200) {
+                            this.subdomainDicts = response.data.data;
+                        }
+                    } catch (error) {
+                        console.error('加载子域名字典列表失败:', error);
+                        this.addLog('加载子域名字典列表失败', 'error');
+                    }
+                },
+                
+                // 添加日志
+                addLog(message, level = 'info') {
+                    const log = {
+                        time: new Date().toISOString(),
+                        message: message,
+                        level: level
+                    };
+                    this.logs.push(log);
+                    
+                    // 限制日志数量
+                    if (this.logs.length > 1000) {
+                        this.logs = this.logs.slice(-1000);
+                    }
+                    
+                    // 自动滚动到底部
+                    this.scrollToBottom();
+                },
+                
+                // 滚动到底部
+                scrollToBottom() {
+                    setTimeout(() => {
+                        const logArea = document.querySelector('.log-area');
+                        if (logArea) {
+                            logArea.scrollTop = logArea.scrollHeight;
+                        }
+                    }, 100);
+                },
+                
+                // 开始收集
+                async startCollect() {
+                    if (!this.targets.trim()) {
+                        this.$message.error('请输入目标地址');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await axios.post('/api/start', {
+                            targets: this.targets,
+                            params: this.params
+                        });
+                        
+                        if (response.data.code === 200) {
+                            this.$message.success('收集任务已开始');
+                            this.collecting = true;
+                            this.logs = [];  // 清空日志
+                        } else {
+                            this.$message.error(response.data.msg || '启动失败');
+                        }
+                    } catch (error) {
+                        console.error('启动收集失败:', error);
+                        this.$message.error('启动收集失败');
+                    }
+                },
+                
+
+                
+                // 停止收集
+                async stopCollect() {
+                    try {
+                        const response = await axios.post('/api/stop');
+                        
+                        if (response.data.code === 200) {
+                            this.$message.success('收集任务已停止');
+                            this.collecting = false;
+                        } else {
+                            this.$message.error(response.data.msg || '停止失败');
+                        }
+                    } catch (error) {
+                        console.error('停止收集失败:', error);
+                        this.$message.error('停止收集失败');
+                    }
+                },
+                
+                // 跳转到树状图页面
+                 goToTree() {
+                     window.location.href = 'tree_view.html';
+                  }
+            }
+        });
+    </script>
+</body>
+</html>
